@@ -132,10 +132,20 @@ enve.recplot <- structure(function(
    for(i in 1:nrow(rec)){
       id.class <- ceiling((id.breaks)*((rec[i, id.reccol]-id.min)/(id.max-id.min)));
       if(id.class<=id.breaks & id.class>0){
-	 for(pos in rec[i, 1]:rec[i, 2]){
-	    pos.class <- ceiling((pos.breaks)*((pos-pos.min)/(pos.max-pos.min)));
-	    if(pos.class<=pos.breaks & pos.class>0) rec.hist[pos.class, id.class] <- rec.hist[pos.class, id.class]+1;
-	 }
+         pos.sclass <- ceiling((pos.breaks)*((rec[i, 1]-pos.min)/(pos.max-pos.min)))
+         pos.eclass <- ceiling((pos.breaks)*((rec[i, 2]-pos.min)/(pos.max-pos.min)))
+         if(pos.sclass==pos.eclass){ # Alignment start and end are within the same bin
+            if(pos.sclass<=pos.breaks & pos.sclass>0) rec.hist[pos.sclass, id.class] <- rec.hist[pos.sclass, id.class] + (rec[i, 2]-rec[i, 1]+1)
+         } else {                    # Alignment start and end are in different bins
+            stopifnot(pos.eclass==pos.sclass+1) # Stop if alignment spans more than 2 bins
+            classmax <- ceiling((pos.sclass / pos.breaks)*(pos.max-pos.min))+pos.min # Convert boundary to coordinate
+            if(pos.sclass<=pos.breaks & pos.sclass>0) rec.hist[pos.sclass, id.class] <- rec.hist[pos.sclass, id.class] + (classmax - rec[i,1])
+            if(pos.eclass<=pos.breaks & pos.eclass>0) rec.hist[pos.eclass, id.class] <- rec.hist[pos.eclass, id.class] + (rec[i,2] - classmax + 1)
+        }
+	  #for(pos in rec[i, 1]:rec[i, 2]){
+	  #  pos.class <- ceiling((pos.breaks)*((pos-pos.min)/(pos.max-pos.min)));
+	  #  if(pos.class<=pos.breaks & pos.class>0) rec.hist[pos.class, id.class] <- rec.hist[pos.class, id.class]+1;
+	  #}
       }
    }
    id.top <- c((1-id.topclasses):0) + id.breaks;
